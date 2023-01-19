@@ -12,7 +12,7 @@ public class Main {
             File file = new File(path);
             boolean fileExists =file.exists();
             boolean isDirectory = file.isDirectory();
-            if (fileExists || isDirectory){
+            if (fileExists && !isDirectory){
                 System.out.println("Путь указан верно");
                 count++;
                 int max = 0;
