@@ -26,14 +26,18 @@ public class Main {
                             new BufferedReader(fileReader);
                     String line;
                     int counte = 0;
+                    int bot1 = 0;
+                    int bot2 = 0;
                     while ((line = reader.readLine()) != null) {
                         int length = line.length();
-                        if (length >= max) {
-                            max = length;
+                        if (line.contains("Googlebot")){
+                            bot1++;
                         }
-                        if (length <= min || length < max) {
-                            min = length;
+                        if (line.contains("YandexBot")){
+                            bot2++;
                         }
+
+
                         counte++;
                         if (max >= 1024) {
                             throw new RuntimeException("В файле встретилась строка длиннее 1024 символов");
@@ -41,8 +45,12 @@ public class Main {
 
                     }
                     System.out.println("Общее количество строк в файле: " + counte);
-                    System.out.println("Длина самой длинной строки в файле: " + max);
-                    System.out.println("Длина самой короткой строки в файле: " + min);
+                    double b1 = (double) bot1/counte * 100;
+                    double b2 = (double) bot2/counte * 100;
+                    System.out.println("Доля запросов от Google: " + b1);
+                    System.out.println("Доля запросов от Yandex: " + b2);
+
+
 
                 } catch (Exception ex) {
                     ex.printStackTrace();
