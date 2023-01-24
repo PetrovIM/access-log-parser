@@ -25,6 +25,7 @@ public class Main {
                     int counte = 0;
                     int bot1 = 0;
                     int bot2 = 0;
+                    Statistics st = new Statistics();
                     while ((line = reader.readLine()) != null) {
                         int length = line.length();
                         if (line.contains("Googlebot")){
@@ -33,12 +34,13 @@ public class Main {
                         if (line.contains("YandexBot")){
                             bot2++;
                         }
-
-
+                        LogEntry logEntry = new LogEntry(line);
+                        st.addEntry(logEntry);
                         counte++;
                         if (max >= 1024) {
                             throw new RuntimeException("В файле встретилась строка длиннее 1024 символов");
                         }
+
 
                     }
                     System.out.println("Общее количество строк в файле: " + counte);
@@ -46,6 +48,11 @@ public class Main {
                     double b2 = (double) bot2/counte * 100;
                     System.out.println("Доля запросов от Google: " + b1);
                     System.out.println("Доля запросов от Yandex: " + b2);
+                    System.out.println("Min time: " + st.getMinTime());
+                    System.out.println("Max time: " + st.getMaxTime());
+                    System.out.println("Total trafic: " + st.getTotalTraffic());
+                    System.out.println("Trafic rate: " + st.getTrafficRate());
+
 
 
 
