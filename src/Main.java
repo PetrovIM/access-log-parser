@@ -36,6 +36,7 @@ public class Main {
                         }
                         LogEntry logEntry = new LogEntry(line);
                         st.addEntry(logEntry);
+
                         counte++;
                         if (max >= 1024) {
                             throw new RuntimeException("В файле встретилась строка длиннее 1024 символов");
@@ -52,6 +53,7 @@ public class Main {
                     System.out.println("Max time: " + st.getMaxTime());
                     System.out.println("Total trafic: " + st.getTotalTraffic());
                     System.out.println("Trafic rate: " + st.getTrafficRate());
+
 
 
 
