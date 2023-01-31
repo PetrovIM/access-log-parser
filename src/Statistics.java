@@ -9,10 +9,9 @@ public class Statistics {
     private LocalDateTime minTime;
     private LocalDateTime maxTime;
     private HashSet<String> existingPage;
+    private HashSet<String> nonexistentPage;
     private HashMap<String, Integer> operatingSystem;
-
-
-
+    private HashMap<String, Integer> usersBrowser;
 
 
     public Statistics() {
@@ -21,6 +20,8 @@ public class Statistics {
         maxTime = null;
         existingPage = new HashSet<>();
         operatingSystem = new HashMap<>();
+        nonexistentPage = new HashSet<>();
+        usersBrowser = new HashMap<>();
     }
 
     public void addEntry(LogEntry logEntry) {
@@ -33,6 +34,8 @@ public class Statistics {
 
         if(logEntry.getCodeResponse() == 200){
             existingPage.add(logEntry.getPath());
+        } else if(logEntry.getCodeResponse() == 404){
+            nonexistentPage.add(logEntry.getPath());
         }
 
         String logEntryOsType = logEntry.getUserAgent().getTypeOS();
@@ -41,6 +44,14 @@ public class Statistics {
             operatingSystem.replace(logEntryOsType, ++counter);
         } else {
             operatingSystem.put(logEntryOsType, 1);
+        }
+
+        String logEntryBrowserType = logEntry.getUserAgent().getBrowser();
+        if (usersBrowser.containsKey(logEntryBrowserType)){
+            int counter = usersBrowser.get(logEntryBrowserType);
+            usersBrowser.replace(logEntryBrowserType,++counter);
+        }else {
+            usersBrowser.put(logEntryBrowserType, 1);
         }
 
     }
@@ -59,22 +70,37 @@ public class Statistics {
         return new ArrayList<>(existingPage);
     }
 
+    public List<String> getAllNonexistentPage(){
+        return new ArrayList<>(nonexistentPage);
+    }
+
     public HashMap <String, Double> getOperationOsSystem(){
         HashMap<String,Double> operationOsSystem = new HashMap<>();
-        int osCounter = oSCalculator();
+        int osCounter = Calculator(operatingSystem);
         for (Map.Entry<String,Integer> entry : operatingSystem.entrySet()){
             operationOsSystem.put(entry.getKey(), ((double) entry.getValue()/(double) osCounter));
         }
         return operationOsSystem;
     }
 
-    public int oSCalculator(){
-        int osCounter = 0;
-        for (Map.Entry<String,Integer> set : operatingSystem.entrySet()){
-            osCounter += set.getValue();
+    public HashMap<String, Double> getUserBrowser(){
+        HashMap <String,Double> userBrowser = new HashMap<>();
+        int browserCounter = Calculator(usersBrowser);
+        for (Map.Entry<String,Integer> browser : usersBrowser.entrySet()){
+            userBrowser.put(browser.getKey(), ((double) browser.getValue()/ (double) browserCounter));
         }
-        return osCounter;
+        return userBrowser;
     }
+
+    public int Calculator(HashMap<String ,Integer> inputSet){
+        int counter = 0;
+        for (Map.Entry<String,Integer> set : inputSet.entrySet()){
+            counter += set.getValue();
+        }
+        return counter;
+    }
+
+
 
     public long getTotalTraffic() {
         return totalTraffic;
@@ -93,5 +119,14 @@ public class Statistics {
     }
     public HashMap<String, Integer> getOperatingSystem() {
         return operatingSystem;
+    }
+
+
+    public HashSet<String> getNonexistentPage() {
+        return nonexistentPage;
+    }
+
+    public HashMap<String, Integer> getUsersBrowser() {
+        return usersBrowser;
     }
 }
