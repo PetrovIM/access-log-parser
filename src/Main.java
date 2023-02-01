@@ -53,6 +53,10 @@ public class Main {
                     System.out.println("Max time: " + st.getMaxTime());
                     System.out.println("Total trafic: " + st.getTotalTraffic());
                     System.out.println("Trafic rate: " + st.getTrafficRate());
+                    System.out.println("Visit Real Users: " + st.getRealVisitUserIsHours());
+                    System.out.println("Invalid Visit Real Users: " + st.getRealVisitUserInvalidIsHours());
+                    System.out.println("Visit One Users: " + st.getVisitOneUser());
+
 
 
 
