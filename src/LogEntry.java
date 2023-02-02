@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 public class LogEntry {
     private static final String REGEX = "([\\d]{1,3}[\\.][\\d]{1,3}[\\.][\\d]{1,3}[\\.][\\d]{1,3})\\s([\\-|\\s])+\\s([\\-|\\s])\\s\\[([^]]*)\\]\\s\\\"([^\\\"]*)\\\"\\s([\\d]+)\\s([\\d]+)\\s\\\"([^\\\"]*)\\\"\\s\\\"([^\\\"]*)\\\"";
     private static final String TIME = "dd/MMM/yyyy:HH:mm:ss Z";
+    private static final String DOMAIN = "\\/\\/([\\w|\\-]+\\.\\w{1,5})";
     private final String ipAdd;
     private final String propertyOne;
     private final String propertyTwo;
@@ -18,6 +19,7 @@ public class LogEntry {
     private final int sizeData;
     private final String referer;
     private final UserAgent userAgent;
+    private final String domain;
 
     public LogEntry(String log){
         Pattern pattern = Pattern.compile(REGEX, Pattern.MULTILINE);
@@ -36,6 +38,13 @@ public class LogEntry {
         this.sizeData = Integer.parseInt(matcher.group(7));
         this.referer = matcher.group(8);
         this.userAgent = new UserAgent(matcher.group(9));
+
+        String [] domains = matcher.group(8).split("/");
+        if (domains.length<=1){
+            this.domain =null;
+        } else {
+            this.domain = domains[2];
+        }
 
     }
 
@@ -69,6 +78,10 @@ public class LogEntry {
 
     public UserAgent getUserAgent() {
         return userAgent;
+    }
+
+    public String getDomain(){
+        return domain;
     }
 
     private String [] methodPathParser (String methodPathString){

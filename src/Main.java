@@ -56,6 +56,13 @@ public class Main {
                     System.out.println("Visit Real Users: " + st.getRealVisitUserIsHours());
                     System.out.println("Invalid Visit Real Users: " + st.getRealVisitUserInvalidIsHours());
                     System.out.println("Visit One Users: " + st.getVisitOneUser());
+                    System.out.println("Browser proportion statistics " + st.getUserBrowser());
+                    System.out.println("OS type proportion statistics " + st.getOperationOsSystem());
+                    System.out.println("Visits for particular second " + st.getNumberOfVisitsForParticularSecond(5));
+                    System.out.println("Number of valid pages with code 2xx " + st.getAllExistingPage().size());
+                    System.out.println("Number of invalid pages with code 4xx or 5xx " + st.getAllNonexistentPage().size());
+                    System.out.println("Max number of visits by one unique users " + st.getMaxVisitsByOneUniqueUser());
+
 
 
 

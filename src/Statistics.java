@@ -3,6 +3,7 @@ import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Statistics {
     private long totalTraffic;
@@ -17,7 +18,9 @@ public class Statistics {
     private HashSet<String> ipAddress;
     private HashMap<String, Integer> operatingSystem;
     private HashMap<String, Integer> usersBrowser;
-
+    private HashMap<String, Integer> numberOfVisitsFoEachRealUserMap;
+    private TreeMap<String, Integer> amountOfVisitsEachSecond;
+    private HashSet<String> domainAddresses;
 
 
     public Statistics() {
@@ -30,6 +33,10 @@ public class Statistics {
         nonexistentPage = new HashSet<>();
         usersBrowser = new HashMap<>();
         ipAddress = new HashSet<>();
+        numberOfVisitsFoEachRealUserMap = new HashMap<>();
+        amountOfVisitsEachSecond = new TreeMap<>();
+        domainAddresses = new HashSet<>();
+
     }
 
     public void addEntry(LogEntry logEntry) {
@@ -41,10 +48,10 @@ public class Statistics {
         }
 
         String responseCode = "" + logEntry.getCodeResponse();
-        if(logEntry.getCodeResponse() == GOOD_CODE){
+        if (logEntry.getCodeResponse() == GOOD_CODE) {
             existingPage.add(logEntry.getPath());
-        } else if(responseCode.startsWith((String.valueOf(BAD_CODE_4xx)))
-                || responseCode.startsWith(String.valueOf(BAD_CODE_5xx))){
+        } else if (responseCode.startsWith((String.valueOf(BAD_CODE_4xx)))
+                || responseCode.startsWith(String.valueOf(BAD_CODE_5xx))) {
             nonexistentPage.add(logEntry.getPath());
         }
 
@@ -57,20 +64,34 @@ public class Statistics {
         }
 
         String logEntryBrowserType = logEntry.getUserAgent().getBrowser();
-        if (usersBrowser.containsKey(logEntryBrowserType)){
+        if (usersBrowser.containsKey(logEntryBrowserType)) {
             int counter = usersBrowser.get(logEntryBrowserType);
-            usersBrowser.replace(logEntryBrowserType,++counter);
-        }else {
+            usersBrowser.replace(logEntryBrowserType, ++counter);
+        } else {
             usersBrowser.put(logEntryBrowserType, 1);
         }
 
         boolean isBot = logEntry.getUserAgent().isBot();
-        if (!isBot){
-            noBot +=1;
-        }
-        String ipAdd = logEntry.getIpAdd();
-        if (!isBot){
+        if (!isBot) {
+            noBot += 1;
+            String ipAdd = logEntry.getIpAdd();
             ipAddress.add(ipAdd);
+            String logEntryTime = logEntry.getDateAndTime().toString();
+            if (amountOfVisitsEachSecond.containsKey(logEntryTime)) {
+                amountOfVisitsEachSecond.replace(logEntryTime, amountOfVisitsEachSecond.get(logEntryTime) + 1);
+            } else {
+                amountOfVisitsEachSecond.put(logEntryTime, 1);
+            }
+
+            if (numberOfVisitsFoEachRealUserMap.containsKey(logEntry.getIpAdd())) {
+                numberOfVisitsFoEachRealUserMap.replace(logEntry.getIpAdd(), numberOfVisitsFoEachRealUserMap.get(logEntry.getIpAdd()) + 1);
+            } else {
+                numberOfVisitsFoEachRealUserMap.put(logEntry.getIpAdd(), 1);
+            }
+        }
+        String entryDomains = logEntry.getIpAdd();
+        if (entryDomains != null && !entryDomains.equals("-")) {
+            domainAddresses.add(entryDomains);
         }
     }
 
@@ -78,7 +99,8 @@ public class Statistics {
         double durationHours = getTimeInHoursForAllEntriesInLogFile();
         return BigDecimal.valueOf(totalTraffic).divide(BigDecimal.valueOf(durationHours), RoundingMode.HALF_UP).longValue();
     }
-    private double getTimeInHoursForAllEntriesInLogFile(){
+
+    private double getTimeInHoursForAllEntriesInLogFile() {
         Duration durationBetween = Duration.between(minTime, maxTime);
         double hours = durationBetween.toHoursPart();
         double minutesToHours = (double) durationBetween.toMinutesPart() / 60.0;
@@ -93,54 +115,80 @@ public class Statistics {
     }
 
 
-
-    public List<String> getAllNonexistentPage(){
+    public List<String> getAllNonexistentPage() {
         return new ArrayList<>(nonexistentPage);
     }
 
-    public HashMap <String, Double> getOperationOsSystem(){
-        HashMap<String,Double> operationOsSystem = new HashMap<>();
+    public HashMap<String, Double> getOperationOsSystem() {
+        HashMap<String, Double> operationOsSystem = new HashMap<>();
         int osCounter = Calculator(operatingSystem);
-        for (Map.Entry<String,Integer> entry : operatingSystem.entrySet()){
-            operationOsSystem.put(entry.getKey(), ((double) entry.getValue()/(double) osCounter));
+        for (Map.Entry<String, Integer> entry : operatingSystem.entrySet()) {
+            operationOsSystem.put(entry.getKey(), ((double) entry.getValue() / (double) osCounter));
         }
         return operationOsSystem;
     }
 
-    public HashMap<String, Double> getUserBrowser(){
-        HashMap <String,Double> userBrowser = new HashMap<>();
+    public HashMap<String, Double> getUserBrowser() {
+        HashMap<String, Double> userBrowser = new HashMap<>();
         int browserCounter = Calculator(usersBrowser);
-        for (Map.Entry<String,Integer> browser : usersBrowser.entrySet()){
-            userBrowser.put(browser.getKey(), ((double) browser.getValue()/ (double) browserCounter));
+        for (Map.Entry<String, Integer> browser : usersBrowser.entrySet()) {
+            userBrowser.put(browser.getKey(), ((double) browser.getValue() / (double) browserCounter));
         }
         return userBrowser;
     }
 
-    public int Calculator(HashMap<String ,Integer> inputSet){
+    public int Calculator(HashMap<String, Integer> inputSet) {
         int counter = 0;
-        for (Map.Entry<String,Integer> set : inputSet.entrySet()){
+        for (Map.Entry<String, Integer> set : inputSet.entrySet()) {
             counter += set.getValue();
         }
         return counter;
     }
 
-    public double getRealVisitUserIsHours(){
-        double hours = getTimeInHoursForAllEntriesInLogFile();
-        return hours/ noBot;
+    public int getMaxVisitsByOneUniqueUser() {
+        Optional<Map.Entry<String, Integer>> maxEntry = numberOfVisitsFoEachRealUserMap.entrySet()
+                .stream()
+                .max(Map.Entry.comparingByValue());
+        return maxEntry.get()
+                .getValue();
     }
 
-    public double getRealVisitUserInvalidIsHours(){
+
+    public HashSet<String> getDomainAddresses() {
+        return domainAddresses;
+    }
+
+    public int getNumberOfVisitsForParticularSecond(Integer particularSecond) {
+        if (particularSecond < 0 || particularSecond > amountOfVisitsEachSecond.size())
+            throw new IllegalArgumentException("Вы ввели несуществующее количество секунд");
+
+        AtomicInteger i = new AtomicInteger();
+        HashMap<Integer, Integer> map = new HashMap<>();
+        if (amountOfVisitsEachSecond != null || amountOfVisitsEachSecond.size() > 0) {
+            amountOfVisitsEachSecond.forEach((s, integer) -> map.put(i.getAndIncrement(), integer));
+        }
+
+
+        return map.get(particularSecond);
+    }
+
+    public double getRealVisitUserIsHours() {
+        double hours = getTimeInHoursForAllEntriesInLogFile();
+        return hours / noBot;
+    }
+
+    public double getRealVisitUserInvalidIsHours() {
         double hours = getTimeInHoursForAllEntriesInLogFile();
         int invalid = getSizeNonexistentPage();
-        return hours/ (double) getSizeNonexistentPage();
+        return hours / (double) getSizeNonexistentPage();
     }
 
-    public double getVisitOneUser(){
+    public double getVisitOneUser() {
         return (double) noBot / (double) ipAddress.size();
     }
 
 
-    private int getSizeNonexistentPage(){
+    private int getSizeNonexistentPage() {
         return nonexistentPage.size();
     }
 
@@ -159,6 +207,7 @@ public class Statistics {
     public HashSet<String> getExistingPage() {
         return existingPage;
     }
+
     public HashMap<String, Integer> getOperatingSystem() {
         return operatingSystem;
     }
